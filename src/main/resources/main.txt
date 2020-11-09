@@ -1,0 +1,50 @@
+new k = 50000
+new m = 2000000
+
+print 7009
+print k
+
+new kl = 2 + 200
+print kl
+
+print 129 + 6000
+print 90 + kl
+print kl + k
+
+if 2 = 2 {
+print 222
+if 2 = 3 {
+print kl
+}
+if k = 50000 {
+print k
+}
+}
+
+if 2 + 3 = 5 {
+print 5
+}
+
+k = 12
+print k
+k = m
+print k
+
+print 1000000
+
+for new i = 0 : i = 0 : i = i + 1 {
+print 2222
+}
+
+if 3 < 4 {
+print 4
+}
+
+if 4 > 3 {
+print 4
+}
+
+while 4 > m {
+print m
+m = m + 1
+}

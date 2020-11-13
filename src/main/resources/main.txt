@@ -48,3 +48,9 @@ while 4 > m {
 print m
 m = m + 1
 }
+
+print 1 + 1 + 1
+
+if 2 + 3 + k > 2 {
+print 1
+}

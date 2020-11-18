@@ -9,6 +9,10 @@ new variable_name = [other_variable_1|number_1 + ... other_variable_n|number_n]
 new k = 50000
 new m = 2 + 200
 new z = m + 200
+
+new val = "string"
+new val1 = val
+
 ```
 ### 2. Переопределение значения переменной
 ```
@@ -17,6 +21,8 @@ variable_name = [other_variable_1|number_1 + ... other_variable_n|number_n]
 k = 12
 k = 12 + 15
 k = m
+
+val = "new value"
 ``` 
 ### 3. Вывод значения на экран значения
 ```
@@ -26,6 +32,8 @@ print 1
 print k
 print 1 + k
 print 1 + 1 + 1
+
+print "Hello"
 ``` 
 
 ### 4. Ветвление
@@ -60,6 +68,16 @@ while 4 > m {
  print m
  m = m + 1
 }
+```
+
+### Goto
+#### Создание метки
+```
+# label_name
+```
+#### Переход к метке
+```
+goto label_name
 ```
 
 ## Правила оформления кода

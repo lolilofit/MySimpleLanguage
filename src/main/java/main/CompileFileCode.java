@@ -8,6 +8,9 @@ import main.function.FunctionClass;
 import main.function.PrintFunction;
 import main.numop.NumberOperation;
 import main.numop.PlusOperation;
+import main.types.IntType;
+import main.types.SimpleType;
+import main.types.StringType;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
@@ -25,13 +28,15 @@ import java.util.regex.Pattern;
 import static main.Patterns.*;
 
 public class CompileFileCode {
-    Map<String, Integer> variablesPool = new HashMap<>();
+    public Map<String, SimpleType> variablesPool = new HashMap<>();
+
+    public Map<String, Label> labelsPool = new HashMap<>();
 
     public ClassWriter cw;
 
     public MethodVisitor methodVisitor;
 
-    int variablesCounter = 1;
+    public int variablesCounter = 1;
 
     BufferedReader in;
 
@@ -55,30 +60,38 @@ public class CompileFileCode {
         functions.add(new PrintFunction(this));
     }
 
-    private void createInteger(String src) {
-        Integer value = Integer.parseInt(src);
-        cw.newConst(value);
-        methodVisitor.visitLdcInsn(value);
-    }
-
-    private void loadVariable(Integer m) {
-        methodVisitor.visitVarInsn(Opcodes.ILOAD, m);
-    }
-
-    public void parseSimpleValue(String src) throws CompileError {
-        if (Pattern.matches("\\d+", src))
-            createInteger(src);
-        else {
-            if(variablesPool.containsKey(src))
-                loadVariable(variablesPool.get(src));
-            else
-                throw new CompileError("Bad value");
+    public SimpleType parseSimpleValue(String src) throws CompileError {
+        if (Pattern.matches(IntType.pattern, src)) {
+            IntType variable = new IntType(this);
+            variable.addValueToPool(src);
+            return variable;
         }
+        if (variablesPool.containsKey(src)) {
+            SimpleType variable = variablesPool.get(src);
+
+            SimpleType newVariable = variable.copyVariable();
+
+            newVariable.getValueFromPool(src, newVariable.getTypeName());
+            return newVariable;
+        }
+        throw new CompileError("Bad value" + src);
+
     }
-    public void generateNumberExpression(String src) throws CompileError {
+
+    public SimpleType calkValue(String src) throws CompileError {
+        if(Pattern.matches(StringType.pattern, src)) {
+            StringType variable = new StringType(this);
+            src = src.trim();
+            variable.addValueToPool(src.substring(1, src.length() - 1));
+            return variable;
+        }
+        return generateNumberExpression(src);
+    }
+
+    public SimpleType generateNumberExpression(String src) throws CompileError {
         src = src.replace(" ", "");
-        if(src.equals(""))
-            throw  new CompileError("Empty token");
+        if (src.equals(""))
+            throw new CompileError("Empty token");
 
         int prevIndex = 0;
         int nearestIndex = -1;
@@ -87,7 +100,9 @@ public class CompileFileCode {
         NumberOperation lastOperation = null;
         NumberOperation currentOperation = null;
 
-        while(prevIndex < src.length()) {
+        SimpleType typeObject = null;
+
+        while (prevIndex < src.length()) {
             nearestIndex = -1;
             for (NumberOperation s : numberOperations) {
                 curIndex = src.indexOf(s.value, prevIndex);
@@ -96,23 +111,22 @@ public class CompileFileCode {
                     currentOperation = s;
                 }
             }
-            if(nearestIndex == -1) {
-                parseSimpleValue(src.substring(prevIndex));
-                if(lastOperation != null)
+            if (nearestIndex == -1) {
+                typeObject = parseSimpleValue(src.substring(prevIndex));
+                if (lastOperation != null)
                     lastOperation.proceed();
-            }
-            else {
-                parseSimpleValue(src.substring(prevIndex, nearestIndex));
-                if(lastOperation != null)
+            } else {
+                typeObject = parseSimpleValue(src.substring(prevIndex, nearestIndex));
+                if (lastOperation != null)
                     lastOperation.proceed();
                 lastOperation = currentOperation;
             }
             prevIndex = nearestIndex == -1 ? src.length() : nearestIndex + 1;
         }
+        return typeObject;
     }
 
     private void calkIntValue(String src) throws CompileError {
-        System.out.println("Int!");
         String[] tokens = src.split("=");
 
         if (tokens.length != 2)
@@ -121,11 +135,8 @@ public class CompileFileCode {
         tokens[0] = tokens[0].replace(" ", "");
         tokens[0] = tokens[0].replace("new", "");
 
-        generateNumberExpression(tokens[1]);
-
-        methodVisitor.visitVarInsn(Opcodes.ISTORE, variablesCounter);
-        variablesPool.put(tokens[0], variablesCounter);
-        variablesCounter++;
+        SimpleType s = calkValue(tokens[1]);
+        s.saveVariable(tokens[0]);
     }
 
     public void assignVariable(String src) throws CompileError {
@@ -135,24 +146,24 @@ public class CompileFileCode {
             throw new CompileError("Should be one =");
 
         tokens[0] = tokens[0].replace(" ", "");
-        generateNumberExpression(tokens[1]);
+        SimpleType s = calkValue(tokens[1]);
 
-        if(!variablesPool.containsKey(tokens[0]))
+        if (!variablesPool.containsKey(tokens[0]))
             throw new CompileError("no such variable " + tokens[0]);
 
-        methodVisitor.visitVarInsn(Opcodes.ISTORE, variablesPool.get(tokens[0]));
+        s.putExistingVariableToPool(tokens[0]);
     }
 
     private void proceedSubBlock(String src, Label label) throws CompileError, IOException {
         int ind;
 
-        for(BooleanOperation op : booleanOperation) {
+        for (BooleanOperation op : booleanOperation) {
             ind = src.indexOf(op.value);
             if (ind != -1) {
                 if (src.indexOf(op.value, ind + 1) != -1)
                     throw new CompileError("Bad if: " + src);
-                generateNumberExpression(src.substring(0, ind));
-                generateNumberExpression(src.substring(ind + 1));
+                calkValue(src.substring(0, ind));
+                calkValue(src.substring(ind + 1));
 
                 op.jump(label);
                 proceedCode();
@@ -179,8 +190,8 @@ public class CompileFileCode {
 
         String[] tokens = src.split(":");
 
-        if(tokens.length != 3)
-            throw  new CompileError("Wrong for");
+        if (tokens.length != 3)
+            throw new CompileError("Wrong for");
         calkIntValue(tokens[0]);
 
         methodVisitor.visitLabel(beginLabel);
@@ -200,6 +211,30 @@ public class CompileFileCode {
         proceedSubBlock(src, whileLabel);
         methodVisitor.visitJumpInsn(Opcodes.GOTO, beginLabel);
         methodVisitor.visitLabel(whileLabel);
+    }
+
+    public void createLabel(String src) throws CompileError {
+        src = src.replace("#", "");
+        src = src.trim();
+
+        if(src.split(" ").length != 1)
+            throw new CompileError("Bad label " + src);
+
+        Label label = new Label();
+
+        methodVisitor.visitLabel(label);
+
+        labelsPool.put(src, label);
+    }
+
+    public void gotoProceed(String src) throws CompileError {
+        src = src.replace("goto", "");
+        src = src.trim();
+
+        if(src.split(" ").length != 1)
+            throw new CompileError("Bad label " + src);
+
+        methodVisitor.visitJumpInsn(Opcodes.GOTO, labelsPool.get(src));
     }
 
     public void generateBeginning() {
@@ -237,19 +272,27 @@ public class CompileFileCode {
                 calkIntValue(line);
                 flag = false;
             }
-            if(Pattern.matches(assignPattern, line)) {
+            if (Pattern.matches(assignPattern, line)) {
                 assignVariable(line);
                 flag = false;
             }
-            if(Pattern.matches(ifPattern, line)) {
+            if(Pattern.matches(labelPattern, line)) {
+                createLabel(line);
+                flag = false;
+            }
+            if (Pattern.matches(gotoPattern, line)) {
+                gotoProceed(line);
+                flag = false;
+            }
+            if (Pattern.matches(ifPattern, line)) {
                 proceedIf(line);
                 flag = false;
             }
-            if(Pattern.matches(forPattern, line)) {
+            if (Pattern.matches(forPattern, line)) {
                 proceedFor(line);
                 flag = false;
             }
-            if(Pattern.matches(whilePattern, line)) {
+            if (Pattern.matches(whilePattern, line)) {
                 proceedWhile(line);
                 flag = false;
             }
@@ -268,7 +311,7 @@ public class CompileFileCode {
     public void writeResultToFile() throws IOException {
         FileOutputStream fileOutputStream = new FileOutputStream("Main.class");
         methodVisitor.visitInsn(Opcodes.RETURN);
-        methodVisitor.visitMaxs(1, 3);
+        methodVisitor.visitMaxs(1, variablesCounter);
         cw.visitEnd();
         fileOutputStream.write(cw.toByteArray());
     }

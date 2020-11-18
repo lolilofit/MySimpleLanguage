@@ -2,6 +2,8 @@ package main.function;
 
 import main.CompileError;
 import main.CompileFileCode;
+import main.types.IntType;
+import main.types.SimpleType;
 import org.objectweb.asm.Opcodes;
 
 import java.util.regex.Pattern;
@@ -30,7 +32,8 @@ public class PrintFunction extends FunctionClass {
         if (values.length == 2)
             value = values[1];
 
-        compileFileCode.generateNumberExpression(value);
-        compileFileCode.methodVisitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/io/PrintStream", "println", "(I)V", false);
+        SimpleType resultType = compileFileCode.calkValue(value);
+
+        compileFileCode.methodVisitor.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/io/PrintStream", "println", "(" + resultType.getAsmTypeName() +")V", false);
     }
 }

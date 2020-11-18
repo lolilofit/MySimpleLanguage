@@ -1,3 +1,12 @@
+new strval = "first str"
+
+new val = strval
+val = "nener"
+
+print strval
+
+print "Hello!"
+# label1
 new k = 50000
 new m = 2000000
 

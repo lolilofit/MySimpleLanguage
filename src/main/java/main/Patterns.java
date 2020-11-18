@@ -10,4 +10,7 @@ public class Patterns {
     static String forPattern = " *for *new \\w+ *= *.+: *.+ *: *\\w+ *=.+ *\\{ *";
 
     static String whilePattern = " *while.+\\{ *";
+
+    static String labelPattern = " *# +\\w+ *";
+    static String gotoPattern = " *goto +\\w+ *";
 }

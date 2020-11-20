@@ -10,7 +10,10 @@ public class EqualsOperation extends BooleanOperation{
     }
 
     @Override
-    public void jump(Label label) {
-        compileFileCode.methodVisitor.visitJumpInsn(Opcodes.IF_ICMPNE, label);
+    public void jump(Label label, Boolean isNot) {
+        if(isNot)
+            compileFileCode.methodVisitor.visitJumpInsn(Opcodes.IF_ICMPEQ, label);
+        else
+            compileFileCode.methodVisitor.visitJumpInsn(Opcodes.IF_ICMPNE, label);
     }
 }

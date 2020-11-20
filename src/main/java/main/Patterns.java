@@ -3,7 +3,9 @@ package main;
 public class Patterns {
     static String variableCreationPattern = " *new \\w+ *= *.+ *";
 
-    static String ifPattern = " *if.+\\{ *";
+    static String ifPattern = " *if *.+\\{ *";
+
+    static String ifNotPattern = "not .+";
 
     static String assignPattern = " *\\w+ *=.+ *";
 

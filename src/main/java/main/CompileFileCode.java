@@ -1,9 +1,6 @@
 package main;
 
-import main.boolop.BooleanOperation;
-import main.boolop.EqualsOperation;
-import main.boolop.GreaterOperation;
-import main.boolop.LessOperation;
+import main.boolop.*;
 import main.function.FunctionClass;
 import main.function.PrintFunction;
 import main.numop.NumberOperation;
@@ -46,7 +43,11 @@ public class CompileFileCode {
 
     List<FunctionClass> functions = new ArrayList<>();
 
-    public CompileFileCode(BufferedReader in) {
+    String fileName;
+
+    public CompileFileCode(BufferedReader in, String fileName) {
+        this.fileName = fileName;
+
         generateBeginning();
 
         this.in = in;
@@ -157,6 +158,15 @@ public class CompileFileCode {
     private void proceedSubBlock(String src, Label label) throws CompileError, IOException {
         int ind;
 
+        boolean isNot = false;
+        if(Pattern.matches(ifNotPattern, src)) {
+            isNot = true;
+            src = src.substring(3);
+            src = src.trim();
+        }
+
+        src = src.replace(" ", "");
+
         for (BooleanOperation op : booleanOperation) {
             ind = src.indexOf(op.value);
             if (ind != -1) {
@@ -165,7 +175,7 @@ public class CompileFileCode {
                 calkValue(src.substring(0, ind));
                 calkValue(src.substring(ind + 1));
 
-                op.jump(label);
+                op.jump(label, isNot);
                 proceedCode();
                 return;
             }
@@ -175,8 +185,9 @@ public class CompileFileCode {
     public void proceedIf(String src) throws CompileError, IOException {
         Label ifLabel = new Label();
 
-        src = src.replace(" ", "");
+        src = src.trim();
         src = src.substring(2, src.length() - 1);
+        src = src.trim();
 
         proceedSubBlock(src, ifLabel);
         methodVisitor.visitLabel(ifLabel);
@@ -309,7 +320,7 @@ public class CompileFileCode {
     }
 
     public void writeResultToFile() throws IOException {
-        FileOutputStream fileOutputStream = new FileOutputStream("Main.class");
+        FileOutputStream fileOutputStream = new FileOutputStream(fileName + ".class");
         methodVisitor.visitInsn(Opcodes.RETURN);
         methodVisitor.visitMaxs(1, variablesCounter);
         cw.visitEnd();

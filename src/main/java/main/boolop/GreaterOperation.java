@@ -10,7 +10,10 @@ public class GreaterOperation extends BooleanOperation {
     }
 
     @Override
-    public void jump(Label label) {
-        compileFileCode.methodVisitor.visitJumpInsn(Opcodes.IF_ICMPLE, label);
+    public void jump(Label label, Boolean isNot) {
+        if(isNot)
+            compileFileCode.methodVisitor.visitJumpInsn(Opcodes.IF_ICMPGT, label);
+        else
+            compileFileCode.methodVisitor.visitJumpInsn(Opcodes.IF_ICMPLE, label);
     }
 }

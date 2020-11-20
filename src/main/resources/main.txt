@@ -1,65 +1,27 @@
 new strval = "first str"
 
-new val = strval
-val = "nener"
+new k = 12
 
-print strval
-
-print "Hello!"
-# label1
-new k = 50000
-new m = 2000000
-
-print 7009
-print k
-
-new kl = 2 + 200
-print kl
-
-print 129 + 6000
-print 90 + kl
-print kl + k
-
-if 2 = 2 {
-print 222
 if 2 = 3 {
-print kl
-}
-if k = 50000 {
-print k
-}
+print 233
 }
 
-if 2 + 3 = 5 {
-print 5
+if not 2 = 3 {
+print "Not works"
 }
 
-k = 12
-print k
-k = m
-print k
-
-print 1000000
-
-for new i = 0 : i = 0 : i = i + 1 {
-print 2222
+if 2 > 3 {
+print ">"
 }
 
-if 3 < 4 {
-print 4
+if not 2 > 3 {
+print "<="
 }
 
-if 4 > 3 {
-print 4
+if 2 < 3 {
+print "<"
 }
 
-while 4 > m {
-print m
-m = m + 1
-}
-
-print 1 + 1 + 1
-
-if 2 + 3 + k > 2 {
-print 1
+if not 2 < 3 {
+print ">="
 }

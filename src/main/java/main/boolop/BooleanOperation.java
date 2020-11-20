@@ -13,5 +13,5 @@ public abstract class BooleanOperation {
        this.compileFileCode = compileFileCode;
    }
 
-   public abstract void jump(Label label);
+   public abstract void jump(Label label, Boolean isNot);
 }

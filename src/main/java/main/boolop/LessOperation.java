@@ -10,7 +10,10 @@ public class LessOperation extends BooleanOperation {
     }
 
     @Override
-    public void jump(Label label) {
-        compileFileCode.methodVisitor.visitJumpInsn(Opcodes.IF_ICMPGE, label);
+    public void jump(Label label, Boolean isNot) {
+        if (isNot)
+            compileFileCode.methodVisitor.visitJumpInsn(Opcodes.IF_ICMPLT, label);
+        else
+            compileFileCode.methodVisitor.visitJumpInsn(Opcodes.IF_ICMPGE, label);
     }
 }
